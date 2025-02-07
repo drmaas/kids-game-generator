@@ -44,15 +44,22 @@ export default function Modal({ children, onClose }: ModalProps) {
     setIsDragging(false);
   };
 
+  const handleOutsideClick = (e: React.MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      onClose();
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-opacity-50 flex items-center justify-center"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onMouseDown={handleOutsideClick}
     >
       <div
         ref={modalRef}
-        className="relative bg-white p-6 rounded shadow-lg max-w-md w-full"
+        className="relative bg-white p-6 rounded shadow-lg max-w-md w-full overflow-y-auto max-h-full"
         style={{ position: 'absolute' }}
         onMouseDown={handleMouseDown}
       >

@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "dotenv -e .env -- concurrently \"vite\" \"tsx watch src/server/index.ts\"",
-    "build": "vite build && tsc -p tsconfig.server.json",
+    "build": "vite build && node esbuild.config.mjs",
     "preview": "vite preview",
-    "start": "NODE_ENV=production node dist/server/index.js",
+    "start": "NODE_ENV=production dotenv -e .env -- node dist/server/index.js",
     "test": "vitest",
-    "lint": "eslint . --fix"
+    "lint": "eslint . --fix",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

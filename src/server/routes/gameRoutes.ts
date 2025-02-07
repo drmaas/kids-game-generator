@@ -28,13 +28,22 @@ router.post(
     try {
       const prompt = `
     Create a children's educational game using JavaScript Canvas API. Follow these rules:
+
     1. Suitable for ages 5-12
     2. No violence or inappropriate content
-    3. Include scoring/feedback system
+    3. Include a scoring/feedback system. Text should be easy to read and appear outside of the game board
     4. Use requestAnimationFrame for animation
     5. Output only the raw JavaScript code without explanations
     6. Do not format in markdown or HTML
-    7. Do not reference images or assets. Use only Canvas API to create graphics.
+    7. Do not reference images or assets. Use only the Canvas API to create graphics.
+    8. The game should render to the dimensions of the canvas element: ${req.body.dimensions}
+    9. The game should be interactive and engaging
+    10. The game should be educational and teach a concept
+    11. The game should be fun and enjoyable
+    12. The game should be easy to understand and play
+    13. The game should be visually appealing
+    14. The game should be responsive and work on all devices
+    15. The game should be unique and creative
     
     Request: ${req.body.prompt}
     `;

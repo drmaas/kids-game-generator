@@ -16,13 +16,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Modal from './Modal'; // Import Modal component
 import ReactMarkdown from 'react-markdown'; // Import ReactMarkdown
+import Spinner from './Spinner'; // Import Spinner component
 
 interface GamePreviewProps {
   code?: string;
   summary?: string; // Add summary prop
+  isLoading?: boolean; // Add isLoading prop
 }
 
-export default function GamePreview({ code, summary }: GamePreviewProps) {
+export default function GamePreview({ code, summary, isLoading }: GamePreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
 
@@ -52,6 +54,11 @@ export default function GamePreview({ code, summary }: GamePreviewProps) {
 
   return (
     <div className="relative w-full h-full">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
+          <Spinner />
+        </div>
+      )}
       <iframe
         ref={iframeRef}
         className="w-full h-full bg-white"
@@ -62,7 +69,7 @@ export default function GamePreview({ code, summary }: GamePreviewProps) {
           className="bg-red-500 text-white px-4 py-2 rounded"
           onClick={initializeGame}
         >
-          Reset
+          Reset Game
         </button>
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded"

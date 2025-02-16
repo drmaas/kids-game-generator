@@ -18,13 +18,13 @@ import GameListPanel from './components/GameListPanel';
 import ChatDialog from './components/ChatDialog';
 import GamePreview from './components/GamePreview';
 import useGameStorage from './hooks/useGameStorage';
-import { Game, Message } from './types/game';
+import { DefaultMessage, Game, Message } from './types/game';
 
 export default function App() {
-  const { games, saveGame, deleteGame } = useGameStorage(); // Add deleteGame
+  const { games, saveGame, deleteGame, updateGame } = useGameStorage(); // Add updateGame
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isCreatingNewGame, setIsCreatingNewGame] = useState(false); // Add state for new game creation
   const gamePreviewRef = useRef<HTMLDivElement>(null); // Add ref for GamePreview
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 }); // Add dimensions state
 
@@ -36,8 +36,12 @@ export default function App() {
   }, [gamePreviewRef]);
 
   const handleCreateGame = async (prompt: string) => {
-    setMessages((prev) => [...prev, { content: prompt, isBot: false }]);
+    if (!selectedGame) return;
+
+    const newMessages: Message[] = [...selectedGame.messages, new DefaultMessage(prompt, 'user')];
+    setSelectedGame({ ...selectedGame, messages: newMessages });
     setIsLoading(true); // Set loading state to true
+    setIsCreatingNewGame(true); // Disable the "New Game" button
 
     try {
       const response = await fetch(
@@ -45,7 +49,7 @@ export default function App() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, dimensions }), // Include dimensions
+          body: JSON.stringify({ prompt: newMessages, dimensions }),
         }
       );
 
@@ -54,35 +58,43 @@ export default function App() {
       }
 
       const { code, summary } = await response.json();
-      const newGame: Game = {
-        id: Date.now().toString(),
-        title: `Game ${games.length + 1}`,
+      const updatedGame: Game = {
+        ...selectedGame,
         code,
         summary,
-        createdAt: new Date(),
+        messages: [...newMessages, new DefaultMessage(summary, 'model')],
       };
 
-      saveGame(newGame);
-      setSelectedGame(newGame);
-      setMessages((prev) => [...prev, { content: summary, isBot: true }]);
+      updateGame(updatedGame); // Use updateGame instead of saveGame
+      setSelectedGame(updatedGame);
     } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          content: (error as Error).message === 'Service Unavailable' 
-            ? 'Failed to create game. Service is currently unavailable. Please try again later.' 
-            : 'Failed to create game. Please try again.',
-          isBot: true,
-        },
-      ]);
+      const errorMessage =
+        (error as Error).message === 'Service Unavailable'
+          ? 'Failed to create game. Service is currently unavailable. Please try again later.'
+          : 'Failed to create game. Please try again.';
+      const erroredGame = {
+        ...selectedGame,
+        messages: [...newMessages, new DefaultMessage(errorMessage, 'model')],
+      };
+      updateGame(erroredGame); // Use updateGame instead of saveGame
+      setSelectedGame(erroredGame);
     } finally {
       setIsLoading(false); // Set loading state to false
+      setIsCreatingNewGame(false); // Re-enable the "New Game" button
     }
   };
 
   const handleNewGame = () => {
-    setMessages([]);
-    setSelectedGame(null);
+    const newGame: Game = {
+      id: Date.now().toString(),
+      title: `Game ${games.length + 1}`,
+      code: '',
+      summary: '',
+      createdAt: new Date(),
+      messages: [],
+    };
+    saveGame(newGame);
+    setSelectedGame(newGame);
   };
 
   const handleDeleteGame = (gameId: string) => {
@@ -92,22 +104,36 @@ export default function App() {
     }
   };
 
+  const handleSelectGame = (game: Game) => {
+    setSelectedGame(game);
+  };
+
   return (
     <div className="h-screen flex">
-      <GameListPanel 
-        games={games} 
-        onSelectGame={setSelectedGame} 
-        onCreateNew={handleNewGame} 
-        onDeleteGame={handleDeleteGame} // Pass handleDeleteGame
+      <GameListPanel
+        games={games}
+        onSelectGame={handleSelectGame}
+        onCreateNew={handleNewGame}
+        onDeleteGame={handleDeleteGame}
+        isCreatingNewGame={isCreatingNewGame}
+        selectedGameId={selectedGame?.id}
       />
 
       <div className="flex-1 flex flex-col">
         <div className="flex-1 flex border-t">
           <div className="flex-1 max-w-2xl p-4 border-r">
-            <ChatDialog messages={messages} onSubmit={handleCreateGame} />
+            <ChatDialog
+              messages={selectedGame?.messages || []}
+              onSubmit={handleCreateGame}
+              disabled={!selectedGame || games.length === 0}
+            />
           </div>
           <div className="flex-1 p-4 bg-gray-50" ref={gamePreviewRef}>
-            <GamePreview code={selectedGame?.code} summary={selectedGame?.summary} isLoading={isLoading} />
+            <GamePreview
+              code={selectedGame?.code}
+              summary={selectedGame?.summary}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </div>

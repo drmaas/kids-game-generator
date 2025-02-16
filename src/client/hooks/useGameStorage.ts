@@ -39,6 +39,13 @@ export default function useGameStorage() {
     localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(updatedGames));
   };
 
-  // Return the games state and the functions to save and delete games
-  return { games, saveGame, deleteGame };
+  // Function to update an existing game in the state and localStorage
+  const updateGame = (updatedGame: Game) => {
+    const updatedGames = games.map(game => game.id === updatedGame.id ? updatedGame : game);
+    setGames(updatedGames);
+    localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(updatedGames));
+  };
+
+  // Return the games state and the functions to save, delete, and update games
+  return { games, saveGame, deleteGame, updateGame };
 }

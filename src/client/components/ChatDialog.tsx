@@ -16,33 +16,46 @@
 import { useState } from 'react';
 import { Message } from '../types/game';
 import ReactMarkdown from 'react-markdown';
+import ErrorToast from './ErrorToast'; // Import the new ErrorToast component
 
 interface ChatDialogProps {
   messages: Message[];
   onSubmit: (prompt: string) => void;
 }
 
-export default function ChatDialog({ messages, onSubmit }: ChatDialogProps) {
+export default function ChatDialog({
+  messages,
+  onSubmit,
+  disabled,
+}: ChatDialogProps & { disabled: boolean }) {
   const [input, setInput] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
       onSubmit(input.trim());
       setInput('');
+      setError('');
+    } else {
+      setError('Input cannot be empty');
     }
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto mb-4">
+    <div className={`h-full flex flex-col`}>
+      {error && <ErrorToast message={error} onClose={() => setError('')} />}
+      <div className="flex-1 overflow-y-auto mb-4 ${disabled ? 'opacity-50' : ''}">
         {messages.map((message, i) => (
-          <div key={i} className={`p-3 mb-2 rounded ${message.isBot ? 'bg-gray-100' : 'bg-blue-100'}`}>
-            {message.isBot ? <ReactMarkdown>{message.content}</ReactMarkdown> : message.content}
+          <div
+            key={i}
+            className={`p-3 mb-2 rounded ${message.isBot() ? 'bg-gray-100' : 'bg-blue-100'}`}
+          >
+            {message.isBot() ? <ReactMarkdown>{message.content}</ReactMarkdown> : message.content}
           </div>
         ))}
       </div>
-      
+
       <form onSubmit={handleSubmit} className="border-t pt-4">
         <textarea
           value={input}
@@ -50,10 +63,12 @@ export default function ChatDialog({ messages, onSubmit }: ChatDialogProps) {
           className="w-full p-2 border rounded mb-2"
           placeholder="Describe your educational game..."
           rows={3}
+          disabled={disabled}
         />
-        <button 
+        <button
           type="submit"
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          className={`bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={disabled}
         >
           Create Game
         </button>

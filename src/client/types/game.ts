@@ -14,14 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 export interface Game {
-    id: string;
-    title: string;
-    code: string;
-    summary: string;
-    createdAt: Date;
+  id: string;
+  title: string;
+  code: string;
+  summary: string;
+  createdAt: Date;
+  messages: Message[];
+}
+
+export interface Message {
+  content: string;
+  role: 'user' | 'model';
+  isBot: () => boolean;
+}
+
+export class DefaultMessage implements Message {
+  content: string;
+  role: 'user' | 'model';
+
+  constructor(content: string, role: 'user' | 'model') {
+    this.content = content;
+    this.role = role;
   }
-  
-  export interface Message {
-    content: string;
-    isBot: boolean;
+
+  isBot() {
+    return this.role === 'model';
   }
+}

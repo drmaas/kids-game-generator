@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import { Router } from 'express';
 import safetyFilter from '../middleware/safetyFilter';
-import { model } from '../llm/gemini';
+import { executePrompt } from '../llm/gemini';
 
 const router = Router();
 
@@ -26,34 +26,39 @@ router.post(
   },
   async (req, res) => {
     try {
-      const prompt = `
-    Create a children's educational game using JavaScript Canvas API. Follow these rules:
+      const systemPrompt = `
+    Create a children's educational game using the JavaScript Canvas API. Follow these technical specifications:
 
-    1. Suitable for ages 5-12
-    2. No violence or inappropriate content
-    3. Include a scoring/feedback system. Text should be easy to read and appear outside of the game board
+    1. Output only the raw JavaScript code without explanations
+    2. Do not format in markdown or HTML
+    3. The game should render to the dimensions of the canvas element: ${req.body.dimensions}    
     4. Use requestAnimationFrame for animation
-    5. Output only the raw JavaScript code without explanations
-    6. Do not format in markdown or HTML
-    7. Do not reference images or assets. Use only the Canvas API to create graphics.
-    8. The game should render to the dimensions of the canvas element: ${req.body.dimensions}
-    9. The game should be interactive and engaging
-    10. The game should be educational and teach a concept
-    11. The game should be fun and enjoyable
-    12. The game should be easy to understand and play
-    13. The game should be visually appealing
-    14. The game should be responsive and work on all devices
-    15. The game should be unique and creative
-    
-    Request: ${req.body.prompt}
-    `;
+    5. The game must be able to run in a web browser
 
-      const result = await model.generateContent(prompt);
+    Follow these content guidelines:
+
+    1. Ensure the game is rated PG
+    2. Games MUST keep track of each player's turn, score, and notify players of the winner
+    3. No violence or inappropriate content
+    4. No personal information or data collection
+    5. No external links or advertisements
+    
+    Follow these game design principles:
+
+    1. Incorporate educational elements such as math puzzles, language skills, science facts, or problem-solving challenges, making learning fun and engaging.
+
+    2. Use stunning, vibrant graphics with smooth animations, colorful environments, and charming characters to captivate young players' attention.
+
+    3. Ensure the game is easy to play with simple controls suitable for touchscreens, keyboards, and controllers, making it accessible across all devices including mobile phones, tablets, and computers.
+
+    4. Optimize the game for seamless play across all devices and screen sizes, ensuring responsive design, fast loading times, and smooth performance.`;
+
+      const result = await executePrompt(systemPrompt, req.body.prompt);
       const code = result.response.text();
 
       // Simple summary extraction
-      const summaryPrompt = `Provide a detailed explanation of this game. Include rules and objective. Do NOT include code explanations: ${code}`;
-      const summaryResult = await model.generateContent(summaryPrompt);
+      const summaryPrompt = `Provide a detailed explanation of this game. Include rules and objective. Do NOT include code explanations.`;
+      const summaryResult = await executePrompt(code, summaryPrompt);
       const summary = summaryResult.response.text();
 
       res.json({ code, summary });

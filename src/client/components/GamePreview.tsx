@@ -28,6 +28,8 @@ export default function GamePreview({ code, summary, isLoading }: GamePreviewPro
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal
 
+  const isDisabled = !code || !summary; // Determine if buttons should be disabled
+
   const initializeGame = useCallback(() => {
     if (iframeRef.current) {
       const iframe = iframeRef.current;
@@ -43,7 +45,7 @@ export default function GamePreview({ code, summary, isLoading }: GamePreviewPro
           </body>
         </html>
       `;
-      
+
       iframe.srcdoc = gameHTML;
     }
   }, [code]);
@@ -66,14 +68,20 @@ export default function GamePreview({ code, summary, isLoading }: GamePreviewPro
       />
       <div className="absolute bottom-4 right-4 flex space-x-2">
         <button
-          className="bg-red-500 text-white px-4 py-2 rounded"
+          className={`bg-red-500 text-white px-4 py-2 
+            hover:bg-red-600
+            rounded ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={initializeGame}
+          disabled={isDisabled}
         >
           Reset Game
         </button>
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className={`bg-blue-500 text-white px-4 py-2 
+            hover:bg-blue-600
+            rounded ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={() => setIsModalOpen(true)}
+          disabled={isDisabled}
         >
           Instructions
         </button>

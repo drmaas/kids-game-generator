@@ -13,22 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-export default function Spinner() {
-  return (
-    <div className="spinner-border animate-spin-slow inline-block w-16 h-16 border-4 border-gray-300 border-t-blue-500 rounded-full" role="status">
-      <style>{`
-        .animate-spin-slow {
-          animation: spin 2s linear infinite;
-        }
-        @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
-    </div>
-  );
-}
+
+export interface Message {
+  content: string;
+  role: 'user' | 'model';
+};

@@ -14,25 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import { Request, Response, NextFunction } from 'express';
-import { model } from '../llm/gemini';
+import { executePrompt } from '../llm/gemini';
 
 export default async function safetyFilter(req: Request, res: Response, next: NextFunction) {
   try {
     const { prompt } = req.body;
-    
-    const safetyCheck = await model.generateContent(`
+
+    const systemPrompt = `
       Analyze this prompt for children's game creation suitability. 
       Block if contains any of: violence, explicit content, adult themes.
-      Prompt: ${prompt}
       Response format: "safe" or "unsafe"
-    `);
+    `;
+    const safetyCheck = await executePrompt(prompt, systemPrompt);
 
     const result = safetyCheck.response.text();
-    
+
     if (result.trim().toLowerCase() === 'unsafe') {
       return res.status(400).json({ error: 'Prompt violates content guidelines' });
     }
-    
+
     next();
   } catch (error) {
     console.log(error);

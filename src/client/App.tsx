@@ -18,11 +18,13 @@ import GameListPanel from './components/GameListPanel';
 import ChatDialog from './components/ChatDialog';
 import GamePreview from './components/GamePreview';
 import useGameStorage from './hooks/useGameStorage';
-import { DefaultMessage, Game, Message } from './types/game';
+import { createMessage, Game, Message } from './types/game';
 
 export default function App() {
-  const { games, saveGame, deleteGame, updateGame } = useGameStorage(); // Add updateGame
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const { games, createGame, saveGame, deleteGame, updateGame } = useGameStorage();
+  const [selectedGame, setSelectedGame] = useState<Game | null>(() => {
+    return games[0];
+  });
   const [isLoading, setIsLoading] = useState(false); // Add loading state
   const [isCreatingNewGame, setIsCreatingNewGame] = useState(false); // Add state for new game creation
   const gamePreviewRef = useRef<HTMLDivElement>(null); // Add ref for GamePreview
@@ -38,7 +40,7 @@ export default function App() {
   const handleCreateGame = async (prompt: string) => {
     if (!selectedGame) return;
 
-    const newMessages: Message[] = [...selectedGame.messages, new DefaultMessage(prompt, 'user')];
+    const newMessages: Message[] = [...selectedGame.messages, createMessage(prompt, 'user')];
     setSelectedGame({ ...selectedGame, messages: newMessages });
     setIsLoading(true); // Set loading state to true
     setIsCreatingNewGame(true); // Disable the "New Game" button
@@ -62,7 +64,7 @@ export default function App() {
         ...selectedGame,
         code,
         summary,
-        messages: [...newMessages, new DefaultMessage(summary, 'model')],
+        messages: [...newMessages, createMessage(summary, 'model')],
       };
 
       updateGame(updatedGame); // Use updateGame instead of saveGame
@@ -74,7 +76,7 @@ export default function App() {
           : 'Failed to create game. Please try again.';
       const erroredGame = {
         ...selectedGame,
-        messages: [...newMessages, new DefaultMessage(errorMessage, 'model')],
+        messages: [...newMessages, createMessage(errorMessage, 'model')],
       };
       updateGame(erroredGame); // Use updateGame instead of saveGame
       setSelectedGame(erroredGame);
@@ -85,14 +87,7 @@ export default function App() {
   };
 
   const handleNewGame = () => {
-    const newGame: Game = {
-      id: Date.now().toString(),
-      title: `Game ${games.length + 1}`,
-      code: '',
-      summary: '',
-      createdAt: new Date(),
-      messages: [],
-    };
+    const newGame = createGame(`Game ${games.length + 1}`);
     saveGame(newGame);
     setSelectedGame(newGame);
   };

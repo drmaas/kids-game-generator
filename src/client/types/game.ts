@@ -22,17 +22,13 @@ export interface Game {
   messages: Message[];
 }
 
-export interface Message {
-  content: string;
-  role: 'user' | 'model';
-  isBot: () => boolean;
-}
+export type Role = 'user' | 'model';
 
-export class DefaultMessage implements Message {
+export class Message {
   content: string;
-  role: 'user' | 'model';
+  role: Role;
 
-  constructor(content: string, role: 'user' | 'model') {
+  constructor(content: string, role: Role) {
     this.content = content;
     this.role = role;
   }
@@ -41,3 +37,7 @@ export class DefaultMessage implements Message {
     return this.role === 'model';
   }
 }
+
+export const createMessage = (content: string, role: Role) => {
+  return new Message(content, role);
+};
